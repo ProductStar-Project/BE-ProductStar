@@ -27,15 +27,28 @@ export const authController = {
     });
   },
   register: async (req, res) => {
-    const passwordHash = await bcrypt.hash("123456", 12);
-    const user = new authModel({
-      email: "tuannguyen@gmail.com",
+    const { email, password } = req.body;
+
+    const user = await authModel.findOne({ email: email });
+
+    if (user) {
+      return res.status(400).json({ msg: "This is email is alredeay exits" });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ msg: "Please enter your password > 6" });
+    }
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    const newUser = new authModel({
+      email: email,
       password: passwordHash,
     });
-    user.save();
-
-    if (!user) return res.status(400).json({ msg: "This is failed" });
-    return res.status(200).json({ user });
+    await newUser.save();
+    console.log(newUser._doc);
+    // const activation_token = createActivationToken({ ...newUser._doc });
+    if (!newUser) return res.status(400).json({ msg: "This is failed" });
+    return res.status(200).json({ msg: "Register success" });
   },
 };
 
