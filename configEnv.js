@@ -1,0 +1,8 @@
+export const config = {
+  SENDER_EMAIL_ADDRESS: "qangtien27999@gmail.com",
+  MAILING_SERVICE_CLIENT_ID:
+    "740120712457-ramiu2ddj56ac375gmbvchfolonklq0k.apps.googleusercontent.com",
+  MAILING_SERVICE_CLIENT_SECRET: "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",
+  MAILING_SERVICE_REFRESH_TOKEN:
+    "1//048k3iV2mEjrPCgYIARAAGAQSNwF-L9IrhUbWBEFQV3NKCkA2nNJ0uPXkNUiUcViGHHhZayJQuESgl9TqJ7YYva9KKqhsXACKqB0",
+};
