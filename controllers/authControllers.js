@@ -47,7 +47,7 @@ export const authController = {
         password: passwordHash,
       });
       const activation_token = createActiveToken({ ...newUser._doc });
-      const url = `${process.env.CLIENT_URL}/activate/${activation_token}`;
+      const url = `${process.env.CLIENT_URL}/auth/activate/${activation_token}`;
       sendEmail(email, url, "Verify your email address");
       res.json({
         msg: "Register Success! Please activate your email to start.",

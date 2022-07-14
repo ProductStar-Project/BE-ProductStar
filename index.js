@@ -17,7 +17,7 @@ app.use(bodyParser.json({ limit: "30mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "30mb" }));
 app.use(cors());
 
-// app.get("http://localhost:5000/activate/:token",);
+// app.get("http://localhost:5000/auth/activate/:token",);
 
 app.use("/auth", authRouter);
 
