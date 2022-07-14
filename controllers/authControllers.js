@@ -1,5 +1,5 @@
 import { authModel } from "../model/authModel.js";
-import { sendEmail } from "../ultis/sendMail.js";
+import { sendEmail } from "../utils/sendMail.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
@@ -12,9 +12,10 @@ export const authController = {
     if (!user)
       return res.status(400).json({ msg: "This is email does not exits" });
 
-    const passwordMatch = bcrypt.compare(password, user.password);
-    if (!passwordMatch)
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
       return res.status(400).json({ msg: "This is not a valid password" });
+    }
 
     const accessToken = createAccessToken({ id: user._id });
     const refreshToken = createRefreshToken({ id: user._id });
