@@ -18,9 +18,13 @@ export const authController = {
     const accessToken = createAccessToken({ id: user._id });
     const refreshToken = createRefreshToken({ id: user._id });
 
-    return res
-      .status(200)
-      .json({ accessToken, refreshToken, user: { user, password: "" } });
+    const { password: passwordHidden, ...rest } = user._doc;
+
+    return res.status(200).json({
+      accessToken,
+      refreshToken,
+      user: { ...rest },
+    });
   },
   register: async (req, res) => {
     const passwordHash = await bcrypt.hash("123456", 12);
