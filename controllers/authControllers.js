@@ -1,7 +1,12 @@
+import dotenv from "dotenv";
 import { authModel } from "../model/authModel.js";
 import { sendEmail } from "../utils/sendMail.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import { google } from "googleapis";
+const { OAuth2 } = google.auth;
+
+dotenv.config();
 
 export const authController = {
   login: async (req, res) => {
@@ -19,6 +24,12 @@ export const authController = {
 
     const accessToken = createAccessToken({ id: user._id });
     const refreshToken = createRefreshToken({ id: user._id });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      path: "/api/refreshToken",
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30days
+    });
 
     const { password: passwordHidden, ...rest } = user._doc;
 
@@ -93,6 +104,61 @@ export const authController = {
         `<div style=text-align:center><h1>Account has been activated!</h1>
         <a href="${process.env.CLIENT_URL_FE}/login">Link Trang Dang Nhap<a></div>`
       );
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+  googleLogin: async (req, res) => {
+    const client = new OAuth2(process.env.MAILING_SERVICE_CLIENT_ID);
+
+    try {
+      const { tokenId } = req.body;
+      const verify = await client.verifyIdToken({
+        idToken: tokenId,
+        audience: process.env.MAILING_SERVICE_CLIENT_ID,
+      });
+
+      const { email_verified, email } = verify.payload;
+      // const { email_verified, email, name, picture } = verify.payload;
+
+      const password = email + process.env.YOUR_GOOGLE_SECRET;
+
+      const passwordHash = await bcrypt.hash(password, 12);
+
+      if (!email_verified)
+        return res.status(400).json({ msg: "Email verification failed." });
+
+      const user = await authModel.findOne({ email });
+
+      if (user) {
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch)
+          return res.status(400).json({ msg: "Password is incorrect." });
+
+        const refreshToken = createRefreshToken({ id: user._id });
+        res.cookie("refreshToken", refreshToken, {
+          httpOnly: true,
+          path: "/user/refreshToken",
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+
+        res.json({ msg: "Login success!" });
+      } else {
+        const newUser = new authModel({
+          email,
+          password: passwordHash,
+        });
+        await newUser.save();
+
+        const refreshToken = createRefreshToken({ id: newUser._id });
+        res.cookie("refreshToken", refreshToken, {
+          httpOnly: true,
+          path: "/user/refreshToken",
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+
+        res.json({ msg: "Login success!" });
+      }
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
