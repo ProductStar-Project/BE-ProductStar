@@ -76,7 +76,7 @@ export const authController = {
         email,
         password,
       });
-      // await newUser.save();
+      await newUser.save();
 
       // try {
       //   if (role === "company") {
