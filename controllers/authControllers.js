@@ -3,6 +3,8 @@ import { authModel } from "../model/authModel.js";
 import { sendEmail } from "../utils/sendMail.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import fetch from "node-fetch";
+
 import { google } from "googleapis";
 const { OAuth2 } = google.auth;
 
@@ -159,6 +161,37 @@ export const authController = {
 
         res.json({ msg: "Login success!" });
       }
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+  register: async (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      const user = await authModel.findOne({ email: email });
+
+      if (user) {
+        return res.status(400).json({ msg: "This is email is alredeay exits" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ msg: "Please enter your password > 6" });
+      }
+      const passwordHash = await bcrypt.hash(password, 12);
+
+      const newUser = new authModel({
+        email: email,
+        password: passwordHash,
+      });
+      const activation_token = createActiveToken({ ...newUser._doc });
+      const url = `${process.env.CLIENT_URL}/auth/activate/${activation_token}`;
+      sendEmail(email, url, "Verify your email address");
+      res.json({
+        msg: "Register Success! Please activate your email to start.",
+      });
+      //  if (!newUser) return res.status(400).json({ msg: "This is failed" });
+      // return res.status(200).json({ msg: "Register success" });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
