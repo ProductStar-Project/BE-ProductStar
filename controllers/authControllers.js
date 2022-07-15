@@ -165,33 +165,55 @@ export const authController = {
       return res.status(500).json({ msg: err.message });
     }
   },
-  register: async (req, res) => {
+  facebookLogin: async (req, res) => {
     try {
-      const { email, password } = req.body;
+      const { accessToken, userID } = req.body;
 
-      const user = await authModel.findOne({ email: email });
+      const URL = `https://graph.facebook.com/v4.0/${userID}/?fields=id,name,email,picture&access_token=${accessToken}`;
 
-      if (user) {
-        return res.status(400).json({ msg: "This is email is alredeay exits" });
-      }
+      const data = await fetch(URL)
+        .then((res) => res.json())
+        .then((res) => {
+          return res;
+        });
+      const { email, name, picture } = data;
+      const password = email + process.env.FACEBOOK_SECRET;
 
-      if (password.length < 6) {
-        return res.status(400).json({ msg: "Please enter your password > 6" });
-      }
       const passwordHash = await bcrypt.hash(password, 12);
 
-      const newUser = new authModel({
-        email: email,
-        password: passwordHash,
-      });
-      const activation_token = createActiveToken({ ...newUser._doc });
-      const url = `${process.env.CLIENT_URL}/auth/activate/${activation_token}`;
-      sendEmail(email, url, "Verify your email address");
-      res.json({
-        msg: "Register Success! Please activate your email to start.",
-      });
-      //  if (!newUser) return res.status(400).json({ msg: "This is failed" });
-      // return res.status(200).json({ msg: "Register success" });
+      const user = await authModel.findOne({ email });
+      console.log(user);
+
+      if (user) {
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch)
+          return res.status(400).json({ msg: "Password is incorrect." });
+
+        const refresh_token = createRefreshToken({ id: user._id });
+        res.cookie("refreshtoken", refresh_token, {
+          httpOnly: true,
+          path: "/user/refresh_token",
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+
+        res.json({ msg: "Login success!" });
+      } else {
+        const newUser = new authModel({
+          email,
+          password: passwordHash,
+        });
+
+        await newUser.save();
+
+        const refresh_token = createRefreshToken({ id: newUser._id });
+        res.cookie("refreshtoken", refresh_token, {
+          httpOnly: true,
+          path: "/user/refresh_token",
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+
+        res.json({ msg: "Login success!" });
+      }
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
