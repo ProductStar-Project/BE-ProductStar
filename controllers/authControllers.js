@@ -61,40 +61,38 @@ export const authController = {
   },
   activateEmail: async (req, res) => {
     try {
-      const { activation_token } = req.body;
-      const user = jwt.verify(
-        activation_token,
-        process.env.YOUR_ACTIVE_TOKEN_KEY
-      );
+      const { activeToken } = req.params;
 
-      const { firstname, lastname, username, email, password, role } = user;
+      const user = jwt.verify(activeToken, process.env.YOUR_ACTIVE_TOKEN_KEY);
+      console.log(user);
 
-      const check = await Users.findOne({ email });
+      const { email, password } = user;
+
+      const check = await authModel.findOne({ email });
       if (check)
         return res.status(400).json({ msg: "This email already exists." });
 
-      const newUser = new Users({
-        firstname,
-        lastname,
-        username,
+      const newUser = new authModel({
         email,
         password,
-        role,
       });
       await newUser.save();
 
-      try {
-        if (role === "company") {
-          let newCompany = new Company({
-            idCompany: id._id,
-          });
-          await newCompany.save();
-        }
-      } catch (err) {
-        console.log("err:", err.message);
-      }
+      // try {
+      //   if (role === "company") {
+      //     let newCompany = new Company({
+      //       idCompany: id._id,
+      //     });
+      //     await newCompany.save();
+      //   }
+      // } catch (err) {
+      //   console.log("err:", err.message);
+      // }
 
-      res.json({ msg: "Account has been activated!" });
+      res.send(
+        `<div style=text-align:center><h1>Account has been activated!</h1>
+        <a href="${process.env.CLIENT_URL_FE}/login">Link Trang Dang Nhap<a></div>`
+      );
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
