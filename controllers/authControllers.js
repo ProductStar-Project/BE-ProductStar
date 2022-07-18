@@ -43,7 +43,8 @@ export const authController = {
   },
   register: async (req, res) => {
     try {
-      const { email, password } = req.body;
+      const { email, password, firstname, lastname } = req.body;
+      const username = `${firstname} ${lastname}`;
 
       const user = await authModel.findOne({ email: email });
 
@@ -59,6 +60,9 @@ export const authController = {
       const newUser = new authModel({
         email: email,
         password: passwordHash,
+        firstname,
+        lastname,
+        username,
       });
       const activation_token = createActiveToken({ ...newUser._doc });
       const url = `${process.env.CLIENT_URL}/auth/activate/${activation_token}`;
@@ -79,7 +83,7 @@ export const authController = {
       const user = jwt.verify(activeToken, process.env.YOUR_ACTIVE_TOKEN_KEY);
       console.log(user);
 
-      const { email, password } = user;
+      const { email, password, firstname, lastname, username } = user;
 
       const check = await authModel.findOne({ email });
       if (check)
@@ -88,6 +92,9 @@ export const authController = {
       const newUser = new authModel({
         email,
         password,
+        firstname,
+        lastname,
+        username,
       });
       await newUser.save();
 
@@ -119,9 +126,8 @@ export const authController = {
         idToken: tokenId,
         audience: process.env.MAILING_SERVICE_CLIENT_ID,
       });
-
-      const { email_verified, email } = verify.payload;
-      // const { email_verified, email, name, picture } = verify.payload;
+      // const { email_verified, email } = verify.payload;
+      const { email_verified, email, name, picture } = verify.payload;
 
       const password = email + process.env.YOUR_GOOGLE_SECRET;
 
@@ -149,6 +155,8 @@ export const authController = {
         const newUser = new authModel({
           email,
           password: passwordHash,
+          username: name,
+          avatar: picture,
         });
         await newUser.save();
 
@@ -201,6 +209,8 @@ export const authController = {
         const newUser = new authModel({
           email,
           password: passwordHash,
+          username: name,
+          avatar: picture.url,
         });
 
         await newUser.save();
