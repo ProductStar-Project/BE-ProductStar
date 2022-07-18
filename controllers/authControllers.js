@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import fetch from "node-fetch";
 
 import { google } from "googleapis";
+import { generateP } from "../utils/generatePassword.js";
 const { OAuth2 } = google.auth;
 
 dotenv.config();
@@ -66,12 +67,10 @@ export const authController = {
       });
       const activation_token = createActiveToken({ ...newUser._doc });
       const url = `${process.env.CLIENT_URL}/auth/activate/${activation_token}`;
-      sendEmail(email, url, "Verify your email address");
+      sendEmail(email, url, "Verify your email address", "active");
       res.json({
         msg: "Register Success! Please activate your email to start.",
       });
-      //  if (!newUser) return res.status(400).json({ msg: "This is failed" });
-      // return res.status(200).json({ msg: "Register success" });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
@@ -81,7 +80,6 @@ export const authController = {
       const { activeToken } = req.params;
 
       const user = jwt.verify(activeToken, process.env.YOUR_ACTIVE_TOKEN_KEY);
-      console.log(user);
 
       const { email, password, firstname, lastname, username } = user;
 
@@ -113,6 +111,53 @@ export const authController = {
         `<div style=text-align:center><h1>Account has been activated!</h1>
         <a href="${process.env.CLIENT_URL_FE}/login">Link Trang Dang Nhap<a></div>`
       );
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+  forgotPassword: async (req, res) => {
+    try {
+      const { email } = req.body;
+      const user = await authModel.findOne({ email: email });
+      if (!user) {
+        return res.status(400).json({ msg: "This is email does not exits" });
+      }
+      const newPassword = generateP();
+      const passwordHash = await bcrypt.hash(newPassword, 12);
+
+      await authModel.findOneAndUpdate(
+        { email },
+        { password: passwordHash },
+        { new: true }
+      );
+      sendEmail(email, newPassword, "Your new password", "forgot");
+      return res
+        .status(200)
+        .json({ msg: "Reset password success, please check your email" });
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+  changePassword: async (req, res) => {
+    try {
+      const { email, password, newPassword } = req.body;
+      const user = await authModel.findOne({ email: email });
+      if (!user)
+        return res.status(400).json({ msg: "This is email does not exits" });
+      const isPassword = await bcrypt.compare(password, user.password);
+
+      if (!isPassword)
+        return res.status(400).json({ msg: "Your password don't match" });
+
+      const passwordHash = await bcrypt.hash(newPassword, 12);
+
+      await authModel.findOneAndUpdate(
+        { email },
+        { password: passwordHash },
+        { new: true }
+      );
+
+      return res.status(200).json({ msg: "Your password is change success !" });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
