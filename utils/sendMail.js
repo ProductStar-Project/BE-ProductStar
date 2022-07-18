@@ -23,7 +23,7 @@ oauth2Client.setCredentials({
 });
 
 // send mail
-export const sendEmail = (to, url, txt) => {
+export const sendEmail = (to, url, txt, type) => {
   const accessToken = oauth2Client.getAccessToken();
   const smtpTransport = nodemailer.createTransport({
     service: "gmail",
@@ -52,12 +52,27 @@ export const sendEmail = (to, url, txt) => {
               </div>
           `,
   };
-  smtpTransport.sendMail(mailOptions, (err, infor) => {
-    if (err) {
-      console.log(error);
-    } else {
-      console.log(infor);
+  const mailForgot = {
+    from: SENDER_EMAIL_ADDRESS,
+    to: to,
+    subject: "Super Project Activate Account",
+    html: `
+              <div style="max-width: 700px; margin:auto; border: 10px solid #ddd; padding: 50px 20px; font-size: 110%;">
+              <h2 style="text-align: center; text-transform: uppercase;color: teal;">Welcome to the Super Project.</h2>
+              <p style="text-align: center">${txt} : <span style="color:red">${url}</span> </p>
+              
+              </div>
+          `,
+  };
+  smtpTransport.sendMail(
+    type === "forgot" ? mailForgot : mailOptions,
+    (err, infor) => {
+      if (err) {
+        console.log(error);
+      } else {
+        console.log(infor);
+      }
+      smtpTransport.close();
     }
-    smtpTransport.close();
-  });
+  );
 };
