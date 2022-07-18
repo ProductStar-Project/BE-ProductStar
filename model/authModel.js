@@ -33,7 +33,7 @@ const authScheme = new mongoose.Schema(
       default:
         "https://res.cloudinary.com/devatchannel/image/upload/v1602752402/avatar/avatar_cugq40.png",
     },
-    role: { type: String, default: "candidate" },
+    role: { type: String, default: "user" },
     gender: { type: String, default: "Male" },
     mobile: { type: String, default: "" },
     address: { type: String, default: "" },
