@@ -30,7 +30,7 @@ export const authController = {
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      path: "/api/refreshToken",
+      path: "/api/v1/auth/refreshToken",
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30days
     });
 
@@ -191,7 +191,7 @@ export const authController = {
         const refreshToken = createRefreshToken({ id: user._id });
         res.cookie("refreshToken", refreshToken, {
           httpOnly: true,
-          path: "/user/refreshToken",
+          path: "/api/v1/auth/refreshToken",
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
 
@@ -208,7 +208,7 @@ export const authController = {
         const refreshToken = createRefreshToken({ id: newUser._id });
         res.cookie("refreshToken", refreshToken, {
           httpOnly: true,
-          path: "/user/refreshToken",
+          path: "/api/v1/auth/refreshToken",
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
 
@@ -245,7 +245,7 @@ export const authController = {
         const refresh_token = createRefreshToken({ id: user._id });
         res.cookie("refreshtoken", refresh_token, {
           httpOnly: true,
-          path: "/user/refresh_token",
+          path: "/api/v1/auth/refresh_token",
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
 
@@ -263,7 +263,7 @@ export const authController = {
         const refresh_token = createRefreshToken({ id: newUser._id });
         res.cookie("refreshtoken", refresh_token, {
           httpOnly: true,
-          path: "/user/refresh_token",
+          path: "/api/v1/auth/refresh_token",
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
 
@@ -272,6 +272,10 @@ export const authController = {
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
+  },
+  refreshToken: async (req, res) => {
+    console.log(req.headers.cookie.split("=")[1]);
+    return res.json({ id: req.user._id });
   },
 };
 

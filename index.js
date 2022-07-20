@@ -19,7 +19,7 @@ app.use(cors());
 
 // app.get("http://localhost:5000/auth/activate/:token",);
 
-app.use("/auth", authRouter);
+app.use("/api/v1/auth", authRouter);
 
 mongoose
   .connect(URI, { useNewUrlParser: true, useUnifiedTopology: true })
