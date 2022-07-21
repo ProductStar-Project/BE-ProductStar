@@ -10,7 +10,8 @@ router.get("/activate/:active-token", authController.activateEmail);
 router.post("/google-login", authController.googleLogin);
 router.post("/facebook-login", authController.facebookLogin);
 router.post("/forgot-password", authController.forgotPassword);
-router.post("/change-password", authController.changePassword);
-router.post("/refresh-token", authMiddleware, authController.refreshToken);
+router.post("/change-password", authMiddleware, authController.changePassword);
+router.post("/refresh-token", authController.refreshToken);
+router.get("/logout", authController.logout);
 
 export default router;
