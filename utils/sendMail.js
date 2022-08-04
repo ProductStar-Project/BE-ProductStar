@@ -68,7 +68,7 @@ export const sendEmail = (to, url, txt, type) => {
     type === "forgot" ? mailForgot : mailOptions,
     (err, infor) => {
       if (err) {
-        console.log(error);
+        console.log(err);
       } else {
         console.log(infor);
       }

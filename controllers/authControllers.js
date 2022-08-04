@@ -70,7 +70,7 @@ export const authController = {
         username,
       });
       const activation_token = createActiveToken({ ...newUser._doc });
-      const url = `${process.env.CLIENT_URL}/auth/activate/${activation_token}`;
+      const url = `${process.env.CLIENT_URL}/api/v1/auth/activate/${activation_token}`;
       sendEmail(email, url, "Verify your email address", "active");
       res.json({
         msg: "Register Success! Please activate your email to start.",
@@ -82,8 +82,10 @@ export const authController = {
   activateEmail: async (req, res) => {
     try {
       const { activeToken } = req.params;
-
       const user = jwt.verify(activeToken, process.env.YOUR_ACTIVE_TOKEN_KEY);
+      if (!user) {
+        return res.status(400).json({ msg: "sai token" });
+      }
 
       const { email, password, firstname, lastname, username } = user;
 
@@ -99,16 +101,6 @@ export const authController = {
         username,
       });
       await newUser.save();
-      // try {
-      //   if (role === "company") {
-      //     let newCompany = new Company({
-      //       idCompany: id._id,
-      //     });
-      //     await newCompany.save();
-      //   }
-      // } catch (err) {
-      //   console.log("err:", err.message);
-      // }
       res.send(
         `<div style=text-align:center><h1>Account has been activated!</h1>
         <a href="${process.env.CLIENT_URL_FE}/login">Link Trang Dang Nhap<a></div>`
@@ -312,17 +304,17 @@ export const authController = {
 
 const createActiveToken = (payload) => {
   return jwt.sign(payload, process.env.YOUR_ACTIVE_TOKEN_KEY, {
-    expiresIn: "5m",
+    expiresIn: "10m",
   });
 };
 
 const createAccessToken = (payload) => {
   return jwt.sign(payload, process.env.YOUR_ACCESS_TOKEN_KEY, {
-    expiresIn: "1m",
+    expiresIn: "5m",
   });
 };
 const createRefreshToken = (payload) => {
   return jwt.sign(payload, process.env.YOUR_REFRESH_TOKEN_KEY, {
-    expiresIn: "5m",
+    expiresIn: "10m",
   });
 };
